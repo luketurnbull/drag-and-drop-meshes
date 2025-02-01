@@ -3,6 +3,8 @@ import { OrbitControls } from "@react-three/drei";
 import Scene from "./components/scene";
 import { useRef } from "react";
 
+const MESHES = ["cube", "sphere", "cylinder"];
+
 export default function App() {
   const dragItem = useRef<HTMLButtonElement | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -30,15 +32,21 @@ export default function App() {
   return (
     <main className="grid h-screen w-full grid-cols-[300px_1fr]">
       <aside className="bg-gray-100 p-4">
-        <h2>Sidebar</h2>
+        <h2 className="text-lg font-bold mb-2 text-center">Meshes</h2>
 
-        <button
-          draggable
-          onDragStart={handleDragStart}
-          onDragEnd={handleDragEnd}
-        >
-          Drag me
-        </button>
+        <div className="flex flex-col gap-2">
+          {MESHES.map((mesh) => (
+            <button
+              draggable
+              onDragStart={handleDragStart}
+              onDragEnd={handleDragEnd}
+              key={mesh}
+              className="bg-gray-200 p-2 rounded-md"
+            >
+              {mesh.charAt(0).toUpperCase() + mesh.slice(1)}
+            </button>
+          ))}
+        </div>
       </aside>
       <section
         className="w-full h-full min-w-0"

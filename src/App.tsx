@@ -1,14 +1,13 @@
 import { Canvas } from "@react-three/fiber";
-import "./app.css";
 import Scene from "./components/scene";
 
 export default function App() {
   return (
-    <main className="main">
-      <aside className="sidebar">
+    <main className="grid h-screen w-full grid-cols-[300px_1fr]">
+      <aside className="bg-gray-100 p-4">
         <h2>Sidebar</h2>
       </aside>
-      <section className="canvas">
+      <section>
         <Canvas
           shadows
           camera={{

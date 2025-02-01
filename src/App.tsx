@@ -6,9 +6,9 @@ import { MeshType } from "./utils/types";
 import { MESHES } from "./utils/meshes";
 
 export default function App() {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
   const [dragItem, setDragItem] = useState<MeshType | null>(null);
   const [isOverCanvas, setIsOverCanvas] = useState(false);
-  const canvasRef = useRef<HTMLCanvasElement | null>(null);
 
   const handleDragEnterCanvas = () => {
     if (dragItem) {
@@ -32,8 +32,15 @@ export default function App() {
             <button
               draggable
               onDragStart={() => setDragItem(mesh)}
-              onDragEnd={() => setDragItem(null)}
+              onDragEnd={() => {
+                setDragItem(null);
+                setIsOverCanvas(false);
+              }}
               key={mesh}
+              style={{
+                visibility:
+                  mesh === dragItem && isOverCanvas ? "hidden" : "visible",
+              }}
               className="bg-gray-200 cursor-pointer active:cursor-grabbing rounded-md w-[100px] h-[100px] flex items-center justify-center 
               hover:shadow-lg hover:shadow-gray-400/50 hover:scale-105"
             >
@@ -62,7 +69,11 @@ export default function App() {
           <ambientLight intensity={0.5} />
           <directionalLight position={[10, 10, 10]} />
 
-          <Scene isOverCanvas={isOverCanvas} dragItem={dragItem} />
+          <Scene
+            isOverCanvas={isOverCanvas}
+            dragItem={dragItem}
+            canvasRef={canvasRef}
+          />
         </Canvas>
       </section>
     </main>

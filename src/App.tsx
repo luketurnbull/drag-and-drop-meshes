@@ -3,7 +3,7 @@ import { OrbitControls } from "@react-three/drei";
 import Scene from "./components/scene";
 import { useRef } from "react";
 
-const MESHES = ["cube", "sphere", "cylinder"];
+const MESHES = ["cube", "sphere", "cylinder", "cone", "pyramid"];
 
 export default function App() {
   const dragItem = useRef<HTMLButtonElement | null>(null);
@@ -13,26 +13,26 @@ export default function App() {
     dragItem.current = e.currentTarget;
   };
 
-  const handleDragEnd = (e: React.DragEvent<HTMLButtonElement>) => {
+  const handleDragEnd = () => {
     dragItem.current = null;
   };
 
-  const handleDragEnterCanvas = (e: React.DragEvent<HTMLCanvasElement>) => {
+  const handleDragEnterCanvas = () => {
     if (dragItem.current) {
-      dragItem.current.style.opacity = "0.5";
+      console.log("dragItem.current", dragItem.current);
     }
   };
 
-  const handleDragLeaveCanvas = (e: React.DragEvent<HTMLCanvasElement>) => {
+  const handleDragLeaveCanvas = () => {
     if (dragItem.current) {
-      dragItem.current.style.opacity = "1";
+      console.log("dragItem.current", dragItem.current);
     }
   };
 
   return (
-    <main className="grid h-screen w-full grid-cols-[300px_1fr]">
-      <aside className="bg-gray-100 p-4">
-        <h2 className="text-lg font-bold mb-2 text-center">Meshes</h2>
+    <main className="grid h-screen w-full grid-cols-[130px_1fr]">
+      <aside className="bg-gray-100 p-4 h-screen overflow-y-auto">
+        <h2 className="text-lg font-bold mb-4 text-center">Meshes</h2>
 
         <div className="flex flex-col gap-2">
           {MESHES.map((mesh) => (
@@ -41,7 +41,8 @@ export default function App() {
               onDragStart={handleDragStart}
               onDragEnd={handleDragEnd}
               key={mesh}
-              className="bg-gray-200 p-2 rounded-md"
+              className="bg-gray-200 cursor-pointer active:cursor-grabbing rounded-md w-[100px] h-[100px] flex items-center justify-center 
+              hover:shadow-lg hover:shadow-gray-400/50 hover:scale-105"
             >
               {mesh.charAt(0).toUpperCase() + mesh.slice(1)}
             </button>

@@ -2,35 +2,23 @@ import { Canvas } from "@react-three/fiber";
 import { OrbitControls } from "@react-three/drei";
 import Scene from "./components/scene";
 import { useRef, useState } from "react";
-import { Vector3 } from "three";
-import { MeshType, GhostMesh } from "./utils/types";
+import { MeshType } from "./utils/types";
 import { MESHES } from "./utils/meshes";
 
 export default function App() {
-  const dragItem = useRef<HTMLButtonElement | null>(null);
+  const [dragItem, setDragItem] = useState<MeshType | null>(null);
+  const [isOverCanvas, setIsOverCanvas] = useState(false);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
-  const [ghostMesh, setGhostMesh] = useState<GhostMesh | null>(null);
-
-  const handleDragStart = (e: React.DragEvent<HTMLButtonElement>) => {
-    dragItem.current = e.currentTarget;
-  };
-
-  const handleDragEnd = () => {
-    dragItem.current = null;
-  };
 
   const handleDragEnterCanvas = () => {
-    if (dragItem.current) {
-      setGhostMesh({
-        type: dragItem.current.dataset.mesh as MeshType,
-        position: new Vector3(0, 0, 0),
-      });
+    if (dragItem) {
+      setIsOverCanvas(true);
     }
   };
 
   const handleDragLeaveCanvas = () => {
-    if (dragItem.current) {
-      setGhostMesh(null);
+    if (dragItem) {
+      setIsOverCanvas(false);
     }
   };
 
@@ -43,9 +31,8 @@ export default function App() {
           {MESHES.map((mesh) => (
             <button
               draggable
-              onDragStart={handleDragStart}
-              onDragEnd={handleDragEnd}
-              data-mesh={mesh}
+              onDragStart={() => setDragItem(mesh)}
+              onDragEnd={() => setDragItem(null)}
               key={mesh}
               className="bg-gray-200 cursor-pointer active:cursor-grabbing rounded-md w-[100px] h-[100px] flex items-center justify-center 
               hover:shadow-lg hover:shadow-gray-400/50 hover:scale-105"
@@ -75,7 +62,7 @@ export default function App() {
           <ambientLight intensity={0.5} />
           <directionalLight position={[10, 10, 10]} />
 
-          <Scene ghostMesh={ghostMesh} />
+          <Scene isOverCanvas={isOverCanvas} dragItem={dragItem} />
         </Canvas>
       </section>
     </main>

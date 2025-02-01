@@ -1,9 +1,31 @@
 import { useFrame } from "@react-three/fiber";
-import { useRef } from "react";
-import { Mesh } from "three";
-import { GhostMesh } from "../utils/types";
+import { useMemo, useRef } from "react";
+import {
+  BoxGeometry,
+  BufferGeometry,
+  CylinderGeometry,
+  Mesh,
+  SphereGeometry,
+  TorusKnotGeometry,
+  Vector2,
+  Vector3,
+} from "three";
+import { MeshType } from "../utils/types";
 
-export default function Scene({ ghostMesh }: { ghostMesh: GhostMesh | null }) {
+const GEOMETRY_MAP: Record<MeshType, BufferGeometry> = {
+  cube: new BoxGeometry(1, 1, 1),
+  sphere: new SphereGeometry(0.5, 100, 100),
+  cylinder: new CylinderGeometry(0.5, 0.5, 1, 10, 10),
+  "torus-knot": new TorusKnotGeometry(0.5, 0.25, 100, 8),
+};
+
+export default function Scene({
+  isOverCanvas,
+  dragItem,
+}: {
+  isOverCanvas: boolean;
+  dragItem: MeshType | null;
+}) {
   const meshRef = useRef<Mesh>(null);
 
   useFrame(({ clock }) => {
@@ -12,13 +34,25 @@ export default function Scene({ ghostMesh }: { ghostMesh: GhostMesh | null }) {
     }
   });
 
-  console.log("ghostMesh", ghostMesh);
+  const ghostMesh = useMemo(() => {
+    if (isOverCanvas && dragItem) {
+      const geometry = GEOMETRY_MAP[dragItem];
+      return {
+        type: dragItem,
+        position: new Vector3(0, 0, 0),
+        geometry,
+      };
+    }
+  }, [isOverCanvas, dragItem]);
 
   return (
     <>
       {ghostMesh && (
-        <mesh ref={meshRef}>
-          <boxGeometry args={[1, 1, 1]} />
+        <mesh
+          ref={meshRef}
+          position={ghostMesh.position}
+          geometry={ghostMesh.geometry}
+        >
           <meshStandardMaterial color="red" />
         </mesh>
       )}

@@ -1,14 +1,16 @@
 import { Canvas } from "@react-three/fiber";
-import { OrbitControls } from "@react-three/drei";
 import Scene from "./components/scene";
 import { useRef, useState } from "react";
 import { MeshType } from "./utils/types";
 import { MESHES } from "./utils/meshes";
+import { useMeshStore } from "./store/mesh";
+import { Vector3 } from "three";
 
 export default function App() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [dragItem, setDragItem] = useState<MeshType | null>(null);
   const [isOverCanvas, setIsOverCanvas] = useState(false);
+  const addMesh = useMeshStore((state) => state.addMesh);
 
   const handleDragEnterCanvas = () => {
     if (dragItem) {
@@ -35,6 +37,10 @@ export default function App() {
               onDragEnd={() => {
                 setDragItem(null);
                 setIsOverCanvas(false);
+                addMesh({
+                  type: mesh,
+                  position: new Vector3(0, 0, 0),
+                });
               }}
               key={mesh}
               style={{
@@ -64,16 +70,10 @@ export default function App() {
           }}
           ref={canvasRef}
         >
-          <OrbitControls />
-
           <ambientLight intensity={0.5} />
           <directionalLight position={[10, 10, 10]} />
 
-          <Scene
-            isOverCanvas={isOverCanvas}
-            dragItem={dragItem}
-            canvasRef={canvasRef}
-          />
+          <Scene />
         </Canvas>
       </section>
     </main>

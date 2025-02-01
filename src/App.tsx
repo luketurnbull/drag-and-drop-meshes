@@ -1,5 +1,6 @@
 import { Canvas } from "@react-three/fiber";
-import "./App.css";
+import "./app.css";
+import Scene from "./components/scene";
 
 export default function App() {
   return (
@@ -8,14 +9,19 @@ export default function App() {
         <h2>Sidebar</h2>
       </aside>
       <section className="canvas">
-        <Canvas>
+        <Canvas
+          shadows
+          camera={{
+            fov: 45,
+            near: 0.1,
+            far: 200,
+            position: [6, 4, 8],
+          }}
+        >
           <ambientLight intensity={0.5} />
           <directionalLight position={[10, 10, 10]} />
 
-          <mesh>
-            <boxGeometry args={[1, 1, 1]} />
-            <meshStandardMaterial color="red" />
-          </mesh>
+          <Scene />
         </Canvas>
       </section>
     </main>

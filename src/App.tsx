@@ -1,13 +1,15 @@
 import { Canvas } from "@react-three/fiber";
 import { OrbitControls } from "@react-three/drei";
 import Scene from "./components/scene";
-import { useRef } from "react";
-
-const MESHES = ["cube", "sphere", "cylinder", "cone", "pyramid"];
+import { useRef, useState } from "react";
+import { Vector3 } from "three";
+import { MeshType, GhostMesh } from "./utils/types";
+import { MESHES } from "./utils/meshes";
 
 export default function App() {
   const dragItem = useRef<HTMLButtonElement | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const [ghostMesh, setGhostMesh] = useState<GhostMesh | null>(null);
 
   const handleDragStart = (e: React.DragEvent<HTMLButtonElement>) => {
     dragItem.current = e.currentTarget;
@@ -19,13 +21,16 @@ export default function App() {
 
   const handleDragEnterCanvas = () => {
     if (dragItem.current) {
-      console.log("dragItem.current", dragItem.current);
+      setGhostMesh({
+        type: dragItem.current.dataset.mesh as MeshType,
+        position: new Vector3(0, 0, 0),
+      });
     }
   };
 
   const handleDragLeaveCanvas = () => {
     if (dragItem.current) {
-      console.log("dragItem.current", dragItem.current);
+      setGhostMesh(null);
     }
   };
 
@@ -40,6 +45,7 @@ export default function App() {
               draggable
               onDragStart={handleDragStart}
               onDragEnd={handleDragEnd}
+              data-mesh={mesh}
               key={mesh}
               className="bg-gray-200 cursor-pointer active:cursor-grabbing rounded-md w-[100px] h-[100px] flex items-center justify-center 
               hover:shadow-lg hover:shadow-gray-400/50 hover:scale-105"
@@ -69,7 +75,7 @@ export default function App() {
           <ambientLight intensity={0.5} />
           <directionalLight position={[10, 10, 10]} />
 
-          <Scene />
+          <Scene ghostMesh={ghostMesh} />
         </Canvas>
       </section>
     </main>

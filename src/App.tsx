@@ -1,4 +1,5 @@
 import { Canvas } from "@react-three/fiber";
+import { OrbitControls } from "@react-three/drei";
 import Scene from "./components/scene";
 
 export default function App() {
@@ -7,7 +8,7 @@ export default function App() {
       <aside className="bg-gray-100 p-4">
         <h2>Sidebar</h2>
       </aside>
-      <section>
+      <section className="w-full h-full min-w-0">
         <Canvas
           shadows
           camera={{
@@ -17,6 +18,7 @@ export default function App() {
             position: [6, 4, 8],
           }}
         >
+          <OrbitControls />
           <ambientLight intensity={0.5} />
           <directionalLight position={[10, 10, 10]} />
 

@@ -1,28 +1,13 @@
 import { Canvas } from "@react-three/fiber";
 import Scene from "./components/scene";
 import { useRef, useState } from "react";
-import { MeshType } from "./utils/types";
 import { useMeshStore } from "./store/mesh";
-import { BufferGeometry, Vector3 } from "three";
+import { DraggableMesh } from "./utils/types";
 
 export default function App() {
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  const [dragItem, setDragItem] = useState<MeshType | null>(null);
-  const addMesh = useMeshStore((state) => state.addMesh);
+  const sectionRef = useRef<HTMLDivElement>(null);
+  const [dragItem, setDragItem] = useState<DraggableMesh | null>(null);
   const availableMeshes = useMeshStore((state) => state.availableMeshes);
-
-  const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
-    e.preventDefault();
-
-    if (dragItem) {
-      addMesh({
-        type: dragItem,
-        position: new Vector3(0, 0, 0),
-        geometry: availableMeshes.find((mesh) => mesh.type === dragItem)
-          ?.geometry as BufferGeometry,
-      });
-    }
-  };
 
   return (
     <main className="grid h-screen w-full grid-cols-[130px_1fr]">
@@ -33,11 +18,11 @@ export default function App() {
           {availableMeshes.map((mesh) => (
             <button
               draggable
-              onDragStart={(e) => {
-                e.dataTransfer.effectAllowed = "move";
-                setDragItem(mesh.type);
+              onDragStart={() => {
+                setDragItem(mesh);
               }}
               key={mesh.id}
+              data-type={mesh.type}
               className="bg-gray-200 cursor-pointer active:cursor-grabbing rounded-md w-[100px] h-[100px] flex items-center justify-center 
               hover:shadow-lg hover:shadow-gray-400/50 hover:scale-105"
             >
@@ -50,10 +35,14 @@ export default function App() {
         className="w-full h-full min-w-0"
         onDragEnter={(e) => {
           e.preventDefault();
-          e.dataTransfer.dropEffect = "move";
         }}
-        onDragOver={(e) => e.preventDefault()}
-        onDrop={handleDrop}
+        onDragOver={(e) => {
+          e.preventDefault();
+        }}
+        onDragLeave={(e) => {
+          e.preventDefault();
+        }}
+        ref={sectionRef}
       >
         <Canvas
           shadows
@@ -63,9 +52,8 @@ export default function App() {
             far: 200,
             position: [6, 4, 8],
           }}
-          ref={canvasRef}
         >
-          <Scene />
+          <Scene sectionRef={sectionRef} dragItem={dragItem} />
         </Canvas>
       </section>
     </main>

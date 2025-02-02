@@ -1,12 +1,11 @@
 import {
   BoxGeometry,
-  BufferGeometry,
   CylinderGeometry,
   SphereGeometry,
   TorusKnotGeometry,
   Vector3,
 } from "three";
-import { DraggableMesh, MeshType } from "./types";
+import { DraggableMesh } from "./types";
 
 export const MESHES: DraggableMesh[] = [
   {

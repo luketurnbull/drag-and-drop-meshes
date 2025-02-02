@@ -2,7 +2,7 @@ import { DragControls, Outlines } from "@react-three/drei";
 import { useState } from "react";
 import { DraggableMesh } from "../utils/types";
 
-export default function Mesh({ id, type, position, geometry }: DraggableMesh) {
+export default function Mesh({ id, position, geometry }: DraggableMesh) {
   const [hovered, setHovered] = useState(false);
 
   return (

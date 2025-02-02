@@ -44,6 +44,7 @@ export default function Mesh({ id, position, geometry, scale }: DraggableMesh) {
             <Html position={[0, 1, 0]} center transform={false}>
               <div className="bg-white p-2 rounded-md flex items-center justify-center">
                 <button
+                  title="Delete mesh"
                   className="text-black h-10 w-10 hover:cursor-pointer hover:text-red-500"
                   onClick={handleDelete}
                 >

@@ -60,11 +60,12 @@ export default function App() {
         <div className="flex flex-col gap-2">
           {meshes.map((mesh) => (
             <button
+              key={mesh.id}
+              title="Drag me to the scene!"
               draggable
               onDragStart={() => {
                 setDragItem(mesh);
               }}
-              key={mesh.id}
               className="bg-gray-200 cursor-pointer active:cursor-grabbing rounded-md w-[100px] h-[100px] flex items-center justify-center 
               hover:shadow-lg hover:shadow-gray-400/50 hover:scale-105"
             >

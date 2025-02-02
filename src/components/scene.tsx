@@ -1,16 +1,12 @@
 import {
-  DragControls,
   Environment,
   GizmoHelper,
   GizmoViewport,
   Grid,
   OrbitControls,
-  Outlines,
 } from "@react-three/drei";
 import { useMeshStore } from "../store/mesh";
-import { GEOMETRY_MAP } from "../utils/meshes";
-import { DraggableMesh } from "../utils/types";
-import { useState } from "react";
+import Mesh from "./mesh";
 import * as THREE from "three";
 
 export default function Scene() {
@@ -18,8 +14,14 @@ export default function Scene() {
 
   return (
     <>
-      {meshes.map(({ id, type, position }) => (
-        <Mesh key={id} id={id} type={type} position={position} />
+      {meshes.map(({ id, type, position, geometry }) => (
+        <Mesh
+          key={id}
+          id={id}
+          type={type}
+          position={position}
+          geometry={geometry}
+        />
       ))}
 
       <Grid
@@ -45,31 +47,5 @@ export default function Scene() {
         />
       </GizmoHelper>
     </>
-  );
-}
-
-function Mesh({ id, type, position }: DraggableMesh) {
-  const [hovered, setHovered] = useState(false);
-
-  return (
-    <DragControls
-      key={id}
-      autoTransform
-      onHover={(hovered) => {
-        setHovered(hovered);
-        document.body.style.cursor = hovered ? "pointer" : "default";
-      }}
-      onDrag={() => {
-        document.body.style.cursor = "grabbing";
-      }}
-      onDragEnd={() => {
-        document.body.style.cursor = "pointer";
-      }}
-    >
-      <mesh geometry={GEOMETRY_MAP[type]} position={position}>
-        <meshStandardMaterial color={hovered ? "blue" : "red"} />
-        {hovered && <Outlines thickness={5} color="black" />}
-      </mesh>
-    </DragControls>
   );
 }

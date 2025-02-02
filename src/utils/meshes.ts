@@ -4,14 +4,33 @@ import {
   CylinderGeometry,
   SphereGeometry,
   TorusKnotGeometry,
+  Vector3,
 } from "three";
-import { MeshType } from "./types";
+import { DraggableMesh, MeshType } from "./types";
 
-export const MESHES: MeshType[] = ["cube", "sphere", "cylinder", "torus-knot"];
-
-export const GEOMETRY_MAP: Record<MeshType, BufferGeometry> = {
-  cube: new BoxGeometry(1, 1, 1),
-  sphere: new SphereGeometry(0.5, 100, 100),
-  cylinder: new CylinderGeometry(0.5, 0.5, 1, 10, 10),
-  "torus-knot": new TorusKnotGeometry(0.5, 0.25, 100, 8),
-};
+export const MESHES: DraggableMesh[] = [
+  {
+    id: "1",
+    type: "cube",
+    position: new Vector3(0, 0, 0),
+    geometry: new BoxGeometry(1, 1, 1),
+  },
+  {
+    id: "2",
+    type: "sphere",
+    position: new Vector3(1, 0, 0),
+    geometry: new SphereGeometry(0.5, 100, 100),
+  },
+  {
+    id: "3",
+    type: "cylinder",
+    position: new Vector3(2, 0, 0),
+    geometry: new CylinderGeometry(0.5, 0.5, 1, 10, 10),
+  },
+  {
+    id: "4",
+    type: "torus-knot",
+    position: new Vector3(3, 0, 0),
+    geometry: new TorusKnotGeometry(0.5, 0.25, 100, 8),
+  },
+];

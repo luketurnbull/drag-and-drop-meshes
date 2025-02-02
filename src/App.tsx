@@ -2,25 +2,25 @@ import { Canvas } from "@react-three/fiber";
 import Scene from "./components/scene";
 import { useRef, useState } from "react";
 import { MeshType } from "./utils/types";
-import { MESHES } from "./utils/meshes";
 import { useMeshStore } from "./store/mesh";
-import { Vector3 } from "three";
+import { BufferGeometry, Vector3 } from "three";
 
 export default function App() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [dragItem, setDragItem] = useState<MeshType | null>(null);
-  const [isOverCanvas, setIsOverCanvas] = useState(false);
   const addMesh = useMeshStore((state) => state.addMesh);
+  const availableMeshes = useMeshStore((state) => state.availableMeshes);
 
-  const handleDragEnterCanvas = () => {
-    if (dragItem) {
-      setIsOverCanvas(true);
-    }
-  };
+  const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
 
-  const handleDragLeaveCanvas = () => {
     if (dragItem) {
-      setIsOverCanvas(false);
+      addMesh({
+        type: dragItem,
+        position: new Vector3(0, 0, 0),
+        geometry: availableMeshes.find((mesh) => mesh.type === dragItem)
+          ?.geometry as BufferGeometry,
+      });
     }
   };
 
@@ -30,35 +30,30 @@ export default function App() {
         <h2 className="text-lg font-bold mb-4 text-center">Meshes</h2>
 
         <div className="flex flex-col gap-2">
-          {MESHES.map((mesh) => (
+          {availableMeshes.map((mesh) => (
             <button
               draggable
-              onDragStart={() => setDragItem(mesh)}
-              onDragEnd={() => {
-                setDragItem(null);
-                setIsOverCanvas(false);
-                addMesh({
-                  type: mesh,
-                  position: new Vector3(0, 0, 0),
-                });
+              onDragStart={(e) => {
+                e.dataTransfer.effectAllowed = "move";
+                setDragItem(mesh.type);
               }}
-              key={mesh}
-              style={{
-                visibility:
-                  mesh === dragItem && isOverCanvas ? "hidden" : "visible",
-              }}
+              key={mesh.id}
               className="bg-gray-200 cursor-pointer active:cursor-grabbing rounded-md w-[100px] h-[100px] flex items-center justify-center 
               hover:shadow-lg hover:shadow-gray-400/50 hover:scale-105"
             >
-              {mesh.charAt(0).toUpperCase() + mesh.slice(1)}
+              {mesh.type.charAt(0).toUpperCase() + mesh.type.slice(1)}
             </button>
           ))}
         </div>
       </aside>
       <section
         className="w-full h-full min-w-0"
-        onDragEnter={handleDragEnterCanvas}
-        onDragLeave={handleDragLeaveCanvas}
+        onDragEnter={(e) => {
+          e.preventDefault();
+          e.dataTransfer.dropEffect = "move";
+        }}
+        onDragOver={(e) => e.preventDefault()}
+        onDrop={handleDrop}
       >
         <Canvas
           shadows

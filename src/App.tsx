@@ -2,32 +2,18 @@ import { Canvas } from "@react-three/fiber";
 import Scene from "./components/scene";
 import { Suspense, useRef, useState } from "react";
 import { DraggableMesh } from "./utils/types";
-import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
-import { DRACOLoader } from "three/examples/jsm/loaders/DRACOLoader.js";
+import Models from "./components/models";
 import {
-  BoxGeometry,
-  BufferGeometry,
-  CylinderGeometry,
-  Mesh,
-  SphereGeometry,
-  TorusKnotGeometry,
   Vector3,
+  BoxGeometry,
+  SphereGeometry,
+  CylinderGeometry,
+  TorusKnotGeometry,
 } from "three";
-import { useLoader } from "@react-three/fiber";
-import { mergeGeometries } from "three/examples/jsm/utils/BufferGeometryUtils.js";
+import { Html } from "@react-three/drei";
+import Spinner from "./components/spinner";
 
-// Configure DRACO loader once
-const dracoLoader = new DRACOLoader();
-dracoLoader.setDecoderPath("/draco/");
-dracoLoader.setDecoderConfig({ type: "js" });
-
-// Model definitions
-const GLTF_MODELS = [
-  { id: "hamburger", path: "/hamburger.glb", scale: 0.1 },
-  { id: "suzanne", path: "/suzanne.glb", scale: 0.5 },
-] as const;
-
-// Initial primitive meshes
+// Initial primitive Three.js meshes
 const PRIMITIVE_MESHES: DraggableMesh[] = [
   {
     id: "cube",
@@ -55,72 +41,15 @@ const PRIMITIVE_MESHES: DraggableMesh[] = [
   },
 ];
 
-function Models({
-  onModelsLoaded,
-}: {
-  onModelsLoaded: (meshes: DraggableMesh[]) => void;
-}) {
-  // Pre-load all models
-  const models = useLoader(
-    GLTFLoader,
-    GLTF_MODELS.map((m) => m.path),
-    (loader) => {
-      loader.setDRACOLoader(dracoLoader);
-    }
-  );
-
-  // Process models and add them to meshes
-  const processedMeshes: DraggableMesh[] = models.map((gltf, index) => {
-    const { id, scale } = GLTF_MODELS[index];
-    const meshGeometries: BufferGeometry[] = [];
-
-    // Collect all mesh geometries from the scene
-    gltf.scene.traverse((child) => {
-      if (child instanceof Mesh) {
-        // Clone the geometry and apply the world transform
-        const clonedGeometry = child.geometry.clone();
-        clonedGeometry.applyMatrix4(child.matrixWorld);
-
-        // Remove color attributes if they exist
-        if (clonedGeometry.attributes.color) {
-          delete clonedGeometry.attributes.color;
-        }
-
-        meshGeometries.push(clonedGeometry);
-      }
-    });
-
-    if (meshGeometries.length === 0) {
-      throw new Error(`No meshes found in model ${id}`);
-    }
-
-    // Merge all geometries into one
-    const mergedGeometry = mergeGeometries(meshGeometries);
-
-    // Clean up cloned geometries
-    meshGeometries.forEach((geo) => geo.dispose());
-
-    return {
-      id,
-      position: new Vector3(0, 0, 0),
-      geometry: mergedGeometry,
-      scale,
-    };
-  });
-
-  // Call the callback with processed meshes
-  onModelsLoaded(processedMeshes);
-
-  return null; // This component is just for loading
-}
-
 export default function App() {
   const sectionRef = useRef<HTMLDivElement>(null);
   const [dragItem, setDragItem] = useState<DraggableMesh | null>(null);
   const [meshes, setMeshes] = useState<DraggableMesh[]>(PRIMITIVE_MESHES);
+  const [isLoading, setIsLoading] = useState(true);
 
   const handleModelsLoaded = (loadedMeshes: DraggableMesh[]) => {
     setMeshes([...PRIMITIVE_MESHES, ...loadedMeshes]);
+    setIsLoading(false);
   };
 
   return (
@@ -142,6 +71,13 @@ export default function App() {
               {mesh.id.charAt(0).toUpperCase() + mesh.id.slice(1)}
             </button>
           ))}
+          {isLoading && (
+            <div className="flex justify-center items-center">
+              <span className="text-black h-10 w-10 mt-4">
+                <Spinner />
+              </span>
+            </div>
+          )}
         </div>
       </aside>
       <section
@@ -166,7 +102,17 @@ export default function App() {
             position: [6, 4, 8],
           }}
         >
-          <Suspense fallback={null}>
+          <Suspense
+            fallback={
+              <Html>
+                <div className="flex justify-center items-center">
+                  <span className="text-black h-20 w-20">
+                    <Spinner />
+                  </span>
+                </div>
+              </Html>
+            }
+          >
             <Models onModelsLoaded={handleModelsLoaded} />
             <Scene sectionRef={sectionRef} dragItem={dragItem} />
           </Suspense>

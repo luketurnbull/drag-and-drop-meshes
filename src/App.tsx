@@ -70,9 +70,6 @@ export default function App() {
           }}
           ref={canvasRef}
         >
-          <ambientLight intensity={0.5} />
-          <directionalLight position={[10, 10, 10]} />
-
           <Scene />
         </Canvas>
       </section>

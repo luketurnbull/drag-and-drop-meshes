@@ -45,9 +45,9 @@ export default function Scene({
 
       if (point && dragItem) {
         addMesh({
-          type: dragItem.type,
           position: point,
           geometry: dragItem.geometry,
+          scale: dragItem.scale,
         });
       }
     },
@@ -69,13 +69,13 @@ export default function Scene({
 
   return (
     <>
-      {meshes.map(({ id, type, position, geometry }) => (
+      {meshes.map(({ id, position, geometry, scale }) => (
         <Mesh
           key={id}
           id={id}
-          type={type}
           position={position}
           geometry={geometry}
+          scale={scale}
         />
       ))}
 

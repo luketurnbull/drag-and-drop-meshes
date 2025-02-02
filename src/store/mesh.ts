@@ -1,14 +1,13 @@
 import { create } from "zustand";
 import { DraggableMesh } from "../utils/types";
 import { nanoid } from "nanoid";
-import { MESHES } from "../utils/meshes";
 
-export const useMeshStore = create<{
+type MeshStore = {
   meshes: DraggableMesh[];
-  availableMeshes: DraggableMesh[];
   addMesh: (mesh: Omit<DraggableMesh, "id">) => void;
-}>()((set) => ({
-  availableMeshes: MESHES,
+};
+
+export const useMeshStore = create<MeshStore>()((set) => ({
   meshes: [],
   addMesh: (mesh: Omit<DraggableMesh, "id">) => {
     set((state) => ({

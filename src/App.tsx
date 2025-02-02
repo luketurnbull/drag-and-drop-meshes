@@ -1,6 +1,6 @@
 import { Canvas } from "@react-three/fiber";
 import Scene from "./components/scene";
-import { useEffect, useRef, useState } from "react";
+import { Suspense, useRef, useState } from "react";
 import { DraggableMesh } from "./utils/types";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { DRACOLoader } from "three/examples/jsm/loaders/DRACOLoader.js";
@@ -9,124 +9,119 @@ import {
   BufferGeometry,
   CylinderGeometry,
   Mesh,
-  Object3D,
   SphereGeometry,
   TorusKnotGeometry,
   Vector3,
 } from "three";
+import { useLoader } from "@react-three/fiber";
 import { mergeGeometries } from "three/examples/jsm/utils/BufferGeometryUtils.js";
-import { GLTF } from "three/examples/jsm/loaders/GLTFLoader.js";
 
-const GLTF_MODELS: { id: string; path: string; scale?: number }[] = [
-  {
-    id: "hamburger",
-    path: "/hamburger.glb",
-    scale: 0.1,
-  },
+// Configure DRACO loader once
+const dracoLoader = new DRACOLoader();
+dracoLoader.setDecoderPath("/draco/");
+dracoLoader.setDecoderConfig({ type: "js" });
+
+// Model definitions
+const GLTF_MODELS = [
+  { id: "hamburger", path: "/hamburger.glb", scale: 0.1 },
   { id: "suzanne", path: "/suzanne.glb", scale: 0.5 },
+] as const;
+
+// Initial primitive meshes
+const PRIMITIVE_MESHES: DraggableMesh[] = [
+  {
+    id: "cube",
+    position: new Vector3(0, 0, 0),
+    geometry: new BoxGeometry(1, 1, 1),
+    scale: 1,
+  },
+  {
+    id: "sphere",
+    position: new Vector3(0, 0, 0),
+    geometry: new SphereGeometry(0.5, 100, 100),
+    scale: 1,
+  },
+  {
+    id: "cylinder",
+    position: new Vector3(0, 0, 0),
+    geometry: new CylinderGeometry(0.5, 0.5, 1, 10, 10),
+    scale: 1,
+  },
+  {
+    id: "torus-knot",
+    position: new Vector3(0, 0, 0),
+    geometry: new TorusKnotGeometry(0.5, 0.25, 100, 8),
+    scale: 1,
+  },
 ];
+
+function Models({
+  onModelsLoaded,
+}: {
+  onModelsLoaded: (meshes: DraggableMesh[]) => void;
+}) {
+  // Pre-load all models
+  const models = useLoader(
+    GLTFLoader,
+    GLTF_MODELS.map((m) => m.path),
+    (loader) => {
+      loader.setDRACOLoader(dracoLoader);
+    }
+  );
+
+  // Process models and add them to meshes
+  const processedMeshes: DraggableMesh[] = models.map((gltf, index) => {
+    const { id, scale } = GLTF_MODELS[index];
+    const meshGeometries: BufferGeometry[] = [];
+
+    // Collect all mesh geometries from the scene
+    gltf.scene.traverse((child) => {
+      if (child instanceof Mesh) {
+        // Clone the geometry and apply the world transform
+        const clonedGeometry = child.geometry.clone();
+        clonedGeometry.applyMatrix4(child.matrixWorld);
+
+        // Remove color attributes if they exist
+        if (clonedGeometry.attributes.color) {
+          delete clonedGeometry.attributes.color;
+        }
+
+        meshGeometries.push(clonedGeometry);
+      }
+    });
+
+    if (meshGeometries.length === 0) {
+      throw new Error(`No meshes found in model ${id}`);
+    }
+
+    // Merge all geometries into one
+    const mergedGeometry = mergeGeometries(meshGeometries);
+
+    // Clean up cloned geometries
+    meshGeometries.forEach((geo) => geo.dispose());
+
+    return {
+      id,
+      position: new Vector3(0, 0, 0),
+      geometry: mergedGeometry,
+      scale,
+    };
+  });
+
+  // Call the callback with processed meshes
+  onModelsLoaded(processedMeshes);
+
+  return null; // This component is just for loading
+}
 
 export default function App() {
   const sectionRef = useRef<HTMLDivElement>(null);
   const [dragItem, setDragItem] = useState<DraggableMesh | null>(null);
-  const [meshes, setMeshes] = useState<DraggableMesh[]>([]);
+  const [meshes, setMeshes] = useState<DraggableMesh[]>(PRIMITIVE_MESHES);
 
-  useEffect(() => {
-    const loader = new GLTFLoader();
-
-    // Configure DRACOLoader
-    const dracoLoader = new DRACOLoader();
-    dracoLoader.setDecoderPath(
-      "https://www.gstatic.com/draco/versioned/decoders/1.5.6/"
-    ); // Use the latest version
-    dracoLoader.setDecoderConfig({ type: "js" }); // Use JavaScript decoder
-    loader.setDRACOLoader(dracoLoader);
-
-    const loadedMeshes: DraggableMesh[] = [
-      {
-        id: "cube",
-        position: new Vector3(0, 0, 0),
-        geometry: new BoxGeometry(1, 1, 1),
-        scale: 1,
-      },
-      {
-        id: "sphere",
-        position: new Vector3(0, 0, 0),
-        geometry: new SphereGeometry(0.5, 100, 100),
-        scale: 1,
-      },
-      {
-        id: "cylinder",
-        position: new Vector3(0, 0, 0),
-        geometry: new CylinderGeometry(0.5, 0.5, 1, 10, 10),
-        scale: 1,
-      },
-      {
-        id: "torus-knot",
-        position: new Vector3(0, 0, 0),
-        geometry: new TorusKnotGeometry(0.5, 0.25, 100, 8),
-        scale: 1,
-      },
-    ];
-
-    const processMesh = (gltf: GLTF, id: string, scale?: number) => {
-      const meshGeometries: BufferGeometry[] = [];
-
-      gltf.scene.traverse((child: Object3D) => {
-        if (child instanceof Mesh) {
-          const clonedGeometry = child.geometry.clone();
-          clonedGeometry.applyMatrix4(child.matrixWorld);
-
-          if (clonedGeometry.attributes.color) {
-            delete clonedGeometry.attributes.color;
-          }
-
-          meshGeometries.push(clonedGeometry);
-        }
-      });
-
-      if (meshGeometries.length > 0) {
-        try {
-          const mergedGeometry = mergeGeometries(meshGeometries);
-          loadedMeshes.push({
-            id,
-            position: new Vector3(0, 0, 0),
-            geometry: mergedGeometry,
-            scale,
-          });
-        } catch (error) {
-          console.error(`Failed to merge geometries for ${id}:`, error);
-        } finally {
-          meshGeometries.forEach((geo) => geo.dispose());
-        }
-      }
-    };
-
-    GLTF_MODELS.forEach(({ id, path, scale }) => {
-      loader.load(
-        path,
-        (gltf) => {
-          try {
-            processMesh(gltf, id, scale);
-            setMeshes([...loadedMeshes]); // Update meshes as each model loads
-          } catch (error) {
-            console.error(`Error processing ${id}:`, error);
-          }
-        },
-        undefined,
-        (error) => {
-          console.error(`Failed to load ${id}:`, error);
-        }
-      );
-    });
-
-    setMeshes(loadedMeshes); // Set initial primitive meshes
-
-    return () => {
-      dracoLoader.dispose();
-      loadedMeshes.forEach((mesh) => mesh.geometry.dispose());
-    };
-  }, []);
+  const handleModelsLoaded = (loadedMeshes: DraggableMesh[]) => {
+    setMeshes([...PRIMITIVE_MESHES, ...loadedMeshes]);
+  };
 
   return (
     <main className="grid h-screen w-full grid-cols-[130px_1fr]">
@@ -171,7 +166,10 @@ export default function App() {
             position: [6, 4, 8],
           }}
         >
-          <Scene sectionRef={sectionRef} dragItem={dragItem} />
+          <Suspense fallback={null}>
+            <Models onModelsLoaded={handleModelsLoaded} />
+            <Scene sectionRef={sectionRef} dragItem={dragItem} />
+          </Suspense>
         </Canvas>
       </section>
     </main>

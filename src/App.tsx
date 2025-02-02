@@ -3,6 +3,7 @@ import Scene from "./components/scene";
 import { useEffect, useRef, useState } from "react";
 import { DraggableMesh } from "./utils/types";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
+import { DRACOLoader } from "three/examples/jsm/loaders/DRACOLoader.js";
 import {
   BoxGeometry,
   BufferGeometry,
@@ -22,7 +23,6 @@ const GLTF_MODELS: { id: string; path: string; scale?: number }[] = [
     path: "/hamburger.glb",
     scale: 0.1,
   },
-  // { id: "macbook", path: "/macbook.gltf" },
   { id: "suzanne", path: "/suzanne.glb", scale: 0.5 },
 ];
 
@@ -33,6 +33,15 @@ export default function App() {
 
   useEffect(() => {
     const loader = new GLTFLoader();
+
+    // Configure DRACOLoader
+    const dracoLoader = new DRACOLoader();
+    dracoLoader.setDecoderPath(
+      "https://www.gstatic.com/draco/versioned/decoders/1.5.6/"
+    ); // Use the latest version
+    dracoLoader.setDecoderConfig({ type: "js" }); // Use JavaScript decoder
+    loader.setDRACOLoader(dracoLoader);
+
     const loadedMeshes: DraggableMesh[] = [
       {
         id: "cube",
@@ -99,6 +108,7 @@ export default function App() {
         (gltf) => {
           try {
             processMesh(gltf, id, scale);
+            setMeshes([...loadedMeshes]); // Update meshes as each model loads
           } catch (error) {
             console.error(`Error processing ${id}:`, error);
           }
@@ -110,7 +120,12 @@ export default function App() {
       );
     });
 
-    setMeshes(loadedMeshes);
+    setMeshes(loadedMeshes); // Set initial primitive meshes
+
+    return () => {
+      dracoLoader.dispose();
+      loadedMeshes.forEach((mesh) => mesh.geometry.dispose());
+    };
   }, []);
 
   return (

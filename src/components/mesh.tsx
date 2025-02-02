@@ -23,7 +23,7 @@ export default function Mesh({ id, position, geometry, scale }: DraggableMesh) {
       }}
     >
       <mesh geometry={geometry} position={position} scale={scale}>
-        <meshStandardMaterial color={hovered ? "blue" : "red"} />
+        <meshStandardMaterial color={hovered ? 0xcc0000 : 0xdd0000} />
         {hovered && <Outlines thickness={5} color="black" />}
       </mesh>
     </DragControls>

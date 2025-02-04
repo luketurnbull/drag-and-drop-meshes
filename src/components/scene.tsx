@@ -44,7 +44,7 @@ export default function Scene({
         });
       }
     },
-    [dragItem, camera, raycaster, gl.domElement, addMesh]
+    [dragItem, camera, raycaster, gl.domElement, addMesh, sectionRef]
   );
 
   useEffect(() => {

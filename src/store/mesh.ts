@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import { DraggableMesh, MeshMaterial } from "../utils/types";
 import { nanoid } from "nanoid";
+import { Vector3 } from "three";
 
 type MeshStore = {
   meshes: DraggableMesh[];
@@ -10,6 +11,7 @@ type MeshStore = {
   editMesh: (id: string) => void;
   resetSelectedMesh: () => void;
   setMeshMaterial: (material: MeshMaterial) => void;
+  updateMeshPosition: (id: string, position: Vector3) => void;
 };
 
 export const useMeshStore = create<MeshStore>()((set) => ({
@@ -49,5 +51,13 @@ export const useMeshStore = create<MeshStore>()((set) => ({
           : mesh
       ),
     }));
+  },
+  updateMeshPosition: (id: string, position: Vector3) => {
+    set((state) => {
+      const newMeshes = state.meshes.map((mesh) =>
+        mesh.id === id ? { ...mesh, position } : mesh
+      );
+      return { meshes: newMeshes };
+    });
   },
 }));

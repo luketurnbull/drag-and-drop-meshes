@@ -2,7 +2,7 @@ import { CameraControls, DragControls, useCursor } from "@react-three/drei";
 import { useRef, useState, useCallback, useMemo } from "react";
 import { DraggableMesh, MeshPart } from "../utils/types";
 import { useMeshStore } from "../store/mesh";
-import { Box3, Group, MeshStandardMaterialParameters } from "three";
+import { Box3, Group, MeshStandardMaterialParameters, Vector3 } from "three";
 import { ThreeEvent } from "@react-three/fiber";
 import { useCamera } from "../hooks/use-camera";
 import { useTextures } from "../hooks/use-textures";
@@ -16,9 +16,14 @@ export default function Mesh({
 }) {
   const groupRef = useRef<Group>(null!);
   const editMesh = useMeshStore((state) => state.editMesh);
+  const updateMeshPosition = useMeshStore((state) => state.updateMeshPosition);
   const selectedMeshId = useMeshStore((state) => state.selectedMeshId);
   const [isDragging, setIsDragging] = useState<boolean>(false);
+  const [localPosition, setLocalPosition] = useState<Vector3>(mesh.position);
   const { setCameraState } = useCamera(controls);
+
+  // Store the initial position when starting to drag
+  const dragStartPosition = useRef<Vector3 | null>(null);
 
   // Check if the mesh is selected
   const isSelected = useMemo(
@@ -54,24 +59,47 @@ export default function Mesh({
 
   return (
     <DragControls
+      autoTransform={false}
       dragConfig={{
         // Disable drag controls when the mesh is selected
         enabled: !isSelected,
       }}
-      onDrag={() => {
-        // Prevent the mesh from being selected when dragging has started
+      onDragStart={() => {
         setIsDragging(true);
+        // Store the initial position
+        dragStartPosition.current = localPosition.clone();
+      }}
+      onDrag={(
+        _localMatrix,
+        _deltaLocalMatrix,
+        _worldMatrix,
+        deltaWorldMatrix
+      ) => {
+        if (!dragStartPosition.current) return;
+
+        // Get the change in position from the delta world matrix
+        const deltaPosition = new Vector3();
+        deltaPosition.setFromMatrixPosition(deltaWorldMatrix);
+
+        // Update the local position by adding the delta to the initial position
+        const newPosition = dragStartPosition.current
+          .clone()
+          .add(deltaPosition);
+        setLocalPosition(newPosition);
       }}
       onDragEnd={() => {
+        // Update the store with the final position
+        updateMeshPosition(mesh.id, localPosition);
+        dragStartPosition.current = null;
+
         // Prevent the mesh from being selected when dragging has ended
-        // https://stackoverflow.com/questions/54067294/how-to-deactivate-dragcontrols-in-three-js
         setTimeout(() => {
           setIsDragging(false);
         }, 100);
       }}
     >
       <group
-        position={mesh.position}
+        position={localPosition}
         scale={mesh.scale}
         ref={groupRef}
         onClick={handleClick}

@@ -5,7 +5,7 @@ import { DraggableMesh } from "./utils/types";
 import Models from "./components/models";
 import { Vector3, BoxGeometry, SphereGeometry } from "three";
 import { Html, CameraControls } from "@react-three/drei";
-import Spinner from "./icons/Spinner";
+import Spinner from "./icons/spinner";
 import { useMeshStore } from "./store/mesh";
 import BackIcon from "./icons/Back";
 import { setCameraState } from "./utils/camera";
@@ -38,10 +38,10 @@ const PRIMITIVE_MESHES: DraggableMesh[] = [
 
 export default function App() {
   const sectionRef = useRef<HTMLDivElement>(null);
-  const cameraControlsRef = useRef<CameraControls>(null);
   const [dragItem, setDragItem] = useState<DraggableMesh | null>(null);
   const [meshes, setMeshes] = useState<DraggableMesh[]>(PRIMITIVE_MESHES);
   const [isLoading, setIsLoading] = useState(true);
+  const controls = useRef<CameraControls>(null!);
 
   const selectedMeshId = useMeshStore((state) => state.selectedMeshId);
   const resetSelectedMesh = useMeshStore((state) => state.resetSelectedMesh);
@@ -57,8 +57,8 @@ export default function App() {
   };
 
   const handleBackClick = () => {
-    if (cameraControlsRef.current) {
-      setCameraState(cameraControlsRef.current, "default");
+    if (controls.current) {
+      setCameraState(controls.current, "default");
     }
     resetSelectedMesh();
   };
@@ -101,6 +101,7 @@ export default function App() {
           </div>
         )}
       </aside>
+
       <section
         className="w-full h-full min-w-0 relative"
         onDragEnter={(e) => {
@@ -123,6 +124,8 @@ export default function App() {
             position: [6, 4, 8],
           }}
         >
+          <CameraControls makeDefault ref={controls} />
+
           <Suspense
             fallback={
               <Html>
@@ -136,12 +139,13 @@ export default function App() {
           >
             <Models onModelsLoaded={handleModelsLoaded} />
             <Scene
-              ref={cameraControlsRef}
+              controls={controls.current}
               sectionRef={sectionRef}
               dragItem={dragItem}
             />
           </Suspense>
         </Canvas>
+
         {isMeshSelected && (
           <div className="absolute top-4 right-4 flex items-center justify-center">
             <button

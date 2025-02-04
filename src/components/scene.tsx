@@ -11,6 +11,7 @@ import Mesh from "./mesh";
 import * as THREE from "three";
 import { useEffect, useCallback, useRef, forwardRef } from "react";
 import { DraggableMesh } from "../utils/types";
+import { getIntersectionPoint } from "../utils/raycaster";
 
 interface SceneProps {
   sectionRef: React.RefObject<HTMLDivElement>;
@@ -33,29 +34,17 @@ const Scene = forwardRef<CameraControls, SceneProps>(
       }
     }, [ref]);
 
-    const { camera, raycaster } = useThree();
+    const { camera, raycaster, gl } = useThree();
 
     const handleDrop = useCallback(
       (e: DragEvent) => {
         e.preventDefault();
 
-        if (!sectionRef.current) return;
+        if (!sectionRef.current || !dragItem) return;
 
-        const rect = sectionRef.current.getBoundingClientRect();
+        const point = getIntersectionPoint(e, camera, raycaster, gl.domElement);
 
-        const x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
-        const y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
-
-        const mouse = new THREE.Vector2(x, y);
-
-        raycaster.setFromCamera(mouse, camera);
-
-        const plane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
-        const point = new THREE.Vector3();
-
-        raycaster.ray.intersectPlane(plane, point);
-
-        if (point && dragItem) {
+        if (point) {
           addMesh({
             position: point,
             parts: dragItem.parts,
@@ -63,7 +52,7 @@ const Scene = forwardRef<CameraControls, SceneProps>(
           });
         }
       },
-      [dragItem, sectionRef, camera, raycaster, addMesh]
+      [dragItem, camera, raycaster, gl.domElement, addMesh]
     );
 
     useEffect(() => {
@@ -102,7 +91,6 @@ const Scene = forwardRef<CameraControls, SceneProps>(
         )}
 
         <CameraControls makeDefault ref={controls} />
-
         <Environment preset="city" />
         <GizmoHelper alignment="bottom-right" margin={[80, 80]}>
           <GizmoViewport

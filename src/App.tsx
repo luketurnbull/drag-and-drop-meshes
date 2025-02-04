@@ -5,9 +5,10 @@ import { DraggableMesh } from "./utils/types";
 import Models from "./components/models";
 import { Vector3, BoxGeometry, SphereGeometry } from "three";
 import { Html, CameraControls } from "@react-three/drei";
-import Spinner from "./components/spinner";
+import Spinner from "./icons/Spinner";
 import { useMeshStore } from "./store/mesh";
 import BackIcon from "./icons/Back";
+import { setCameraState } from "./utils/camera";
 
 // Initial primitive Three.js meshes
 const PRIMITIVE_MESHES: DraggableMesh[] = [
@@ -57,21 +58,7 @@ export default function App() {
 
   const handleBackClick = () => {
     if (cameraControlsRef.current) {
-      // Reset camera controls
-      cameraControlsRef.current.mouseButtons = {
-        left: 1,
-        middle: 1,
-        right: 1,
-        wheel: 1,
-      };
-      // Enable all touch controls
-      cameraControlsRef.current.touches = {
-        one: 0,
-        two: 0,
-        three: 0,
-      };
-      // Reset camera position
-      cameraControlsRef.current.setPosition(6, 4, 8, true);
+      setCameraState(cameraControlsRef.current, "default");
     }
     resetSelectedMesh();
   };

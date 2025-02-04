@@ -49,6 +49,9 @@ export default function Mesh({
 
   return (
     <DragControls
+      dragConfig={{
+        enabled: !isSelected,
+      }}
       onDrag={() => {
         setIsDragging(true);
       }}

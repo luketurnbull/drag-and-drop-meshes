@@ -46,10 +46,13 @@ export function useTextures(): MaterialTextures {
     "/material/houndstooth-fabric-weave/houndstooth-fabric-weave_Roughness.png",
   ]);
 
-  // Configure texture settings
+  // Configure texture settings with optimizations
   const configureTexture = (texture: Texture) => {
     texture.wrapS = RepeatWrapping;
     texture.wrapT = RepeatWrapping;
+    // Add performance optimizations
+    texture.generateMipmaps = true;
+    texture.needsUpdate = false;
     return texture;
   };
 

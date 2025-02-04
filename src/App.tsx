@@ -2,39 +2,14 @@ import { Canvas } from "@react-three/fiber";
 import Scene from "./components/scene";
 import { Suspense, useMemo, useRef, useState } from "react";
 import { DraggableMesh } from "./utils/types";
-import { useModels } from "./hooks/use-models.ts";
-import { Vector3, BoxGeometry, SphereGeometry } from "three";
 import { Html, CameraControls } from "@react-three/drei";
 import Spinner from "./icons/Spinner";
-import { useMeshStore } from "./store/mesh";
 import BackIcon from "./icons/Back";
+import TrashIcon from "./icons/Trash";
+import { useMeshStore } from "./store/mesh";
 import { useCamera } from "./hooks/use-camera";
-
-// Initial primitive Three.js meshes
-const PRIMITIVE_MESHES: DraggableMesh[] = [
-  {
-    id: "cube",
-    position: new Vector3(0, 0, 0),
-    parts: [
-      {
-        name: "cube",
-        geometry: new BoxGeometry(1, 1, 1),
-      },
-    ],
-    scale: 1,
-  },
-  {
-    id: "sphere",
-    position: new Vector3(0, 0, 0),
-    parts: [
-      {
-        name: "sphere",
-        geometry: new SphereGeometry(0.5, 100, 100),
-      },
-    ],
-    scale: 1,
-  },
-];
+import MeshSelection from "./components/mesh-selection";
+import MaterialSelection from "./components/material-selection";
 
 // Main App component
 // Handles the UI and scene
@@ -46,94 +21,33 @@ export default function App() {
 
   const selectedMeshId = useMeshStore((state) => state.selectedMeshId);
   const resetSelectedMesh = useMeshStore((state) => state.resetSelectedMesh);
-  const setMeshMaterial = useMeshStore((state) => state.setMeshMaterial);
+  const deleteMesh = useMeshStore((state) => state.deleteMesh);
 
   const isMeshSelected = useMemo(
     () => selectedMeshId !== null,
     [selectedMeshId]
   );
 
-  // Load .gltf models
-  const loadedMeshes = useModels();
-
-  // Combine primitive Three.js meshes with loaded models
-  const meshes = useMemo(
-    () => [...PRIMITIVE_MESHES, ...loadedMeshes],
-    [loadedMeshes]
-  );
-  const isLoading = loadedMeshes.length === 0;
-
   const handleBackClick = () => {
     setCameraState("default");
     resetSelectedMesh();
   };
 
+  const handleDeleteClick = () => {
+    if (selectedMeshId) {
+      deleteMesh(selectedMeshId);
+      setCameraState("default");
+      resetSelectedMesh();
+    }
+  };
+
   return (
     <main className="grid h-screen w-full grid-cols-[130px_1fr]">
       <aside className="bg-gray-100 p-4 h-screen overflow-y-auto">
-        {!isMeshSelected && (
-          <div>
-            <h2 className="text-lg font-bold mb-4 text-center">Meshes</h2>
-
-            <div className="flex flex-col gap-2">
-              {meshes.map((mesh) => (
-                <button
-                  key={mesh.id}
-                  title="Drag me to the scene!"
-                  draggable
-                  onDragStart={() => {
-                    setDragItem(mesh);
-                  }}
-                  className="bg-gray-200 cursor-pointer active:cursor-grabbing rounded-md w-[100px] h-[100px] flex items-center justify-center 
-              hover:shadow-lg hover:shadow-gray-400/50 hover:scale-105"
-                >
-                  {mesh.id.charAt(0).toUpperCase() + mesh.id.slice(1)}
-                </button>
-              ))}
-              {isLoading && (
-                <div className="flex justify-center items-center">
-                  <span className="text-black h-10 w-10 mt-4">
-                    <Spinner />
-                  </span>
-                </div>
-              )}
-            </div>
-          </div>
-        )}
-        {isMeshSelected && (
-          <div>
-            <h2 className="text-lg font-bold mb-4 text-center">Materials</h2>
-
-            <div className="flex flex-col gap-2">
-              <button
-                className="bg-gray-200 cursor-pointer active:cursor-grabbing rounded-md w-[100px] h-[100px] flex items-center justify-center 
-              hover:shadow-lg hover:shadow-gray-400/50 hover:scale-105"
-                onClick={() => setMeshMaterial("redPlaid")}
-              >
-                <img
-                  src="/material/red-plaid/red-plaid_preview.jpg"
-                  alt="Red Plaid"
-                />
-              </button>
-              <button
-                className="bg-gray-200 cursor-pointer active:cursor-grabbing rounded-md w-[100px] h-[100px] flex items-center justify-center 
-              hover:shadow-lg hover:shadow-gray-400/50 hover:scale-105"
-                onClick={() => setMeshMaterial("denim")}
-              >
-                <img src="/material/denim/denim_preview.jpg" alt="Denim" />
-              </button>
-              <button
-                className="bg-gray-200 cursor-pointer active:cursor-grabbing rounded-md w-[100px] h-[100px] flex items-center justify-center 
-              hover:shadow-lg hover:shadow-gray-400/50 hover:scale-105"
-                onClick={() => setMeshMaterial("houndstooth")}
-              >
-                <img
-                  src="/material/houndstooth-fabric-weave/houndstooth-fabric-weave_preview.jpg"
-                  alt="Houndstooth"
-                />
-              </button>
-            </div>
-          </div>
+        {isMeshSelected ? (
+          <MaterialSelection />
+        ) : (
+          <MeshSelection setDragItem={setDragItem} />
         )}
       </aside>
 
@@ -181,7 +95,7 @@ export default function App() {
         </Canvas>
 
         {isMeshSelected && (
-          <div className="absolute top-4 right-4 flex items-center justify-center">
+          <div className="absolute top-4 right-4 flex flex-col gap-2 items-center justify-center">
             <button
               title="Back"
               onClick={handleBackClick}
@@ -189,6 +103,15 @@ export default function App() {
             >
               <span className="text-black h-6 w-6 hover:text-gray-900 flex">
                 <BackIcon />
+              </span>
+            </button>
+            <button
+              title="Delete"
+              onClick={handleDeleteClick}
+              className="p-4 bg-gray-100 rounded-full hover:bg-gray-200 hover:cursor-pointer"
+            >
+              <span className="text-black h-6 w-6 hover:text-gray-900 flex">
+                <TrashIcon />
               </span>
             </button>
           </div>

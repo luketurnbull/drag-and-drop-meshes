@@ -2,7 +2,7 @@ import { CameraControls, DragControls, useCursor } from "@react-three/drei";
 import { useRef, useState, useCallback, useMemo } from "react";
 import { DraggableMesh, MeshPart } from "../utils/types";
 import { useMeshStore } from "../store/mesh";
-import { Box3, Group, MeshStandardMaterialParameters, Vector3 } from "three";
+import { Box3, Group, Vector3 } from "three";
 import { ThreeEvent } from "@react-three/fiber";
 import { useCamera } from "../hooks/use-camera";
 import { useTextures } from "../hooks/use-textures";
@@ -116,7 +116,6 @@ export default function Mesh({
 
 function Part({ part, meshId }: { part: MeshPart; meshId: string }) {
   const [hovered, setHovered] = useState(false);
-
   useCursor(hovered);
   const textures = useTextures();
 
@@ -130,31 +129,25 @@ function Part({ part, meshId }: { part: MeshPart; meshId: string }) {
     setHovered(false);
   }, []);
 
-  // Choose material based on mesh ID
+  // Memoize the material textures separately from the material props
+  const materialTextures = useMemo(() => {
+    if (!part.material) return null;
+    return textures[part.material];
+  }, [part.material, textures]);
+
+  // Memoize material props only when textures change
   const materialProps = useMemo(() => {
-    let materialProps: MeshStandardMaterialParameters = {};
+    if (!materialTextures) return {};
 
-    if (!part.material) {
-      return materialProps;
-    }
-
-    const material = textures[part.material];
-
-    if (!material) {
-      return materialProps;
-    }
-
-    materialProps = {
-      map: material.albedo,
-      normalMap: material.normal,
-      metalnessMap: material.metallic,
-      aoMap: material.ao,
-      displacementMap: material.height,
+    return {
+      map: materialTextures.albedo,
+      normalMap: materialTextures.normal,
+      metalnessMap: materialTextures.metallic,
+      aoMap: materialTextures.ao,
+      displacementMap: materialTextures.height,
       displacementScale: 0.001,
     };
-
-    return materialProps;
-  }, [part.material, textures]);
+  }, [materialTextures]);
 
   return (
     <mesh

@@ -1,4 +1,9 @@
-import { CameraControls, DragControls, useCursor } from "@react-three/drei";
+import {
+  CameraControls,
+  DragControls,
+  Outlines,
+  useCursor,
+} from "@react-three/drei";
 import { useRef, useState, useCallback, useMemo } from "react";
 import { DraggableMesh, MeshPart } from "../utils/types";
 
@@ -41,30 +46,42 @@ export default function Mesh({
 
   if (mesh.parts.length === 0) return null;
 
+  if (!isSelected && selectedMeshId !== null) {
+    return null;
+  }
+
+  if (isSelected) {
+    return (
+      <group position={mesh.position} scale={mesh.scale}>
+        {mesh.parts.map((part) => (
+          <Part part={part} key={part.name} />
+        ))}
+      </group>
+    );
+  }
+
   return (
-    <>
-      <DragControls key={mesh.id}>
-        <group
-          position={mesh.position}
-          scale={mesh.scale}
-          ref={groupRef}
-          onClick={() => {
-            if (isSelected) return;
-            editMesh(mesh.id);
-            zoomToMesh();
-          }}
-        >
-          {mesh.parts.map((part) => (
-            <Part part={part} selected={isSelected} key={part.name} />
-          ))}
-        </group>
-      </DragControls>
-    </>
+    <DragControls key={mesh.id}>
+      <group
+        position={mesh.position}
+        scale={mesh.scale}
+        ref={groupRef}
+        onClick={() => {
+          editMesh(mesh.id);
+          zoomToMesh();
+        }}
+      >
+        {mesh.parts.map((part) => (
+          <Part part={part} key={part.name} />
+        ))}
+      </group>
+    </DragControls>
   );
 }
 
-function Part({ part, selected }: { part: MeshPart; selected: boolean }) {
+function Part({ part }: { part: MeshPart }) {
   const [hovered, setHovered] = useState(false);
+  const [selected, setSelected] = useState(false);
 
   useCursor(hovered);
 
@@ -72,12 +89,10 @@ function Part({ part, selected }: { part: MeshPart; selected: boolean }) {
     <mesh
       geometry={part.geometry}
       onPointerOver={(e) => {
-        if (selected) return;
         e.stopPropagation();
         setHovered(true);
       }}
       onPointerOut={(e) => {
-        if (selected) return;
         e.stopPropagation();
         setHovered(false);
       }}

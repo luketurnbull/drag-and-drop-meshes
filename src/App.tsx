@@ -4,9 +4,10 @@ import { Suspense, useMemo, useRef, useState } from "react";
 import { DraggableMesh } from "./utils/types";
 import Models from "./components/models";
 import { Vector3, BoxGeometry, SphereGeometry } from "three";
-import { Html } from "@react-three/drei";
+import { Html, CameraControls } from "@react-three/drei";
 import Spinner from "./components/spinner";
 import { useMeshStore } from "./store/mesh";
+import BackIcon from "./icons/Back";
 
 // Initial primitive Three.js meshes
 const PRIMITIVE_MESHES: DraggableMesh[] = [
@@ -36,11 +37,14 @@ const PRIMITIVE_MESHES: DraggableMesh[] = [
 
 export default function App() {
   const sectionRef = useRef<HTMLDivElement>(null);
+  const cameraControlsRef = useRef<CameraControls>(null);
   const [dragItem, setDragItem] = useState<DraggableMesh | null>(null);
   const [meshes, setMeshes] = useState<DraggableMesh[]>(PRIMITIVE_MESHES);
   const [isLoading, setIsLoading] = useState(true);
 
   const selectedMeshId = useMeshStore((state) => state.selectedMeshId);
+  const resetSelectedMesh = useMeshStore((state) => state.resetSelectedMesh);
+
   const isMeshSelected = useMemo(
     () => selectedMeshId !== null,
     [selectedMeshId]
@@ -49,6 +53,27 @@ export default function App() {
   const handleModelsLoaded = (loadedMeshes: DraggableMesh[]) => {
     setMeshes([...PRIMITIVE_MESHES, ...loadedMeshes]);
     setIsLoading(false);
+  };
+
+  const handleBackClick = () => {
+    if (cameraControlsRef.current) {
+      // Reset camera controls
+      cameraControlsRef.current.mouseButtons = {
+        left: 1,
+        middle: 1,
+        right: 1,
+        wheel: 1,
+      };
+      // Enable all touch controls
+      cameraControlsRef.current.touches = {
+        one: 0,
+        two: 0,
+        three: 0,
+      };
+      // Reset camera position
+      cameraControlsRef.current.setPosition(6, 4, 8, true);
+    }
+    resetSelectedMesh();
   };
 
   return (
@@ -123,9 +148,26 @@ export default function App() {
             }
           >
             <Models onModelsLoaded={handleModelsLoaded} />
-            <Scene sectionRef={sectionRef} dragItem={dragItem} />
+            <Scene
+              ref={cameraControlsRef}
+              sectionRef={sectionRef}
+              dragItem={dragItem}
+            />
           </Suspense>
         </Canvas>
+        {isMeshSelected && (
+          <div className="absolute top-4 right-4 flex items-center justify-center">
+            <button
+              title="Back"
+              onClick={handleBackClick}
+              className="p-4 bg-gray-100 rounded-full hover:bg-gray-200 hover:cursor-pointer"
+            >
+              <span className="text-black h-6 w-6 hover:text-gray-900 flex">
+                <BackIcon />
+              </span>
+            </button>
+          </div>
+        )}
       </section>
     </main>
   );

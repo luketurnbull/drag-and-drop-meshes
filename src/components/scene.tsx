@@ -48,7 +48,7 @@ export default function Scene({
       if (point && dragItem) {
         addMesh({
           position: point,
-          geometry: dragItem.geometry,
+          parts: dragItem.parts,
           scale: dragItem.scale,
         });
       }
@@ -71,15 +71,8 @@ export default function Scene({
 
   return (
     <>
-      {meshes.map(({ id, position, geometry, scale }) => (
-        <Mesh
-          key={id}
-          id={id}
-          position={position}
-          geometry={geometry}
-          scale={scale}
-          controls={controls.current}
-        />
+      {meshes.map((mesh) => (
+        <Mesh key={mesh.id} mesh={mesh} controls={controls.current} />
       ))}
 
       <Grid
@@ -96,7 +89,6 @@ export default function Scene({
         side={THREE.DoubleSide}
       />
 
-      {/* <OrbitControls makeDefault /> */}
       <CameraControls makeDefault ref={controls} />
       <Environment preset="city" />
       <GizmoHelper alignment="bottom-right" margin={[80, 80]}>

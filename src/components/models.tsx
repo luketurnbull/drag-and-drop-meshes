@@ -1,8 +1,7 @@
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { useLoader } from "@react-three/fiber";
-import { DraggableMesh } from "../utils/types";
-import { Vector3, Mesh, BufferGeometry } from "three";
-import { mergeGeometries } from "three/examples/jsm/utils/BufferGeometryUtils.js";
+import { DraggableMesh, MeshPart } from "../utils/types";
+import { Vector3, Mesh } from "three";
 import { DRACOLoader } from "three/examples/jsm/loaders/DRACOLoader.js";
 
 const dracoLoader = new DRACOLoader();
@@ -11,9 +10,9 @@ dracoLoader.setDecoderConfig({ type: "js" });
 
 // Add new models here
 const GLTF_MODELS = [
+  { id: "t-shirt", path: "/t-shirt.glb", scale: 2.0 },
   { id: "hamburger", path: "/hamburger.glb", scale: 0.1 },
   { id: "suzanne", path: "/suzanne.glb", scale: 0.5 },
-  { id: "t-shirt", path: "/t-shirt.glb", scale: 2.0 },
 ] as const;
 
 export default function Models({
@@ -33,9 +32,9 @@ export default function Models({
   // Process models and add them to meshes
   const processedMeshes: DraggableMesh[] = models.map((gltf, index) => {
     const { id, scale } = GLTF_MODELS[index];
-    const meshGeometries: BufferGeometry[] = [];
+    const parts: MeshPart[] = [];
 
-    // Collect all mesh geometries from the scene
+    // Collect all meshes from the scene
     gltf.scene.traverse((child) => {
       if (child instanceof Mesh) {
         // Clone the geometry and apply the world transform
@@ -47,25 +46,22 @@ export default function Models({
           delete clonedGeometry.attributes.color;
         }
 
-        meshGeometries.push(clonedGeometry);
+        parts.push({
+          name: child.name || `part-${parts.length}`,
+          geometry: clonedGeometry,
+        });
       }
     });
 
-    if (meshGeometries.length === 0) {
+    if (parts.length === 0) {
       throw new Error(`No meshes found in model ${id}`);
     }
-
-    // Merge all geometries into one
-    const mergedGeometry = mergeGeometries(meshGeometries);
-
-    // Clean up cloned geometries
-    meshGeometries.forEach((geo) => geo.dispose());
 
     return {
       id,
       position: new Vector3(0, 0, 0),
-      geometry: mergedGeometry,
       scale,
+      parts,
     };
   });
 

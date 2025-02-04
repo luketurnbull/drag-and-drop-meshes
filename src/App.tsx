@@ -5,7 +5,7 @@ import { DraggableMesh } from "./utils/types";
 import Models from "./components/models";
 import { Vector3, BoxGeometry, SphereGeometry } from "three";
 import { Html, CameraControls } from "@react-three/drei";
-import Spinner from "./icons/spinner";
+import Spinner from "./icons/Spinner";
 import { useMeshStore } from "./store/mesh";
 import BackIcon from "./icons/Back";
 import { setCameraState } from "./utils/camera";

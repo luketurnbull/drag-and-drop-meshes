@@ -2,7 +2,7 @@ import { Canvas } from "@react-three/fiber";
 import Scene from "./components/scene";
 import { Suspense, useMemo, useRef, useState } from "react";
 import { DraggableMesh } from "./utils/types";
-import { useModels } from "./hooks/use-models";
+import { useModels } from "./hooks/use-models.ts";
 import { Vector3, BoxGeometry, SphereGeometry } from "three";
 import { Html, CameraControls } from "@react-three/drei";
 import Spinner from "./icons/Spinner";

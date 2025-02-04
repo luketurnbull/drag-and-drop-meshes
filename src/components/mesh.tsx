@@ -5,6 +5,7 @@ import { useMeshStore } from "../store/mesh";
 import { Box3, Group } from "three";
 import { ThreeEvent } from "@react-three/fiber";
 import { useCamera } from "../hooks/use-camera";
+import { useTextures } from "../hooks/use-textures";
 
 export default function Mesh({
   mesh,
@@ -87,6 +88,7 @@ export default function Mesh({
 const Part = memo(({ part }: { part: MeshPart }) => {
   const [hovered, setHovered] = useState(false);
   useCursor(hovered);
+  const textures = useTextures();
 
   const handlePointerOver = useCallback((e: ThreeEvent<PointerEvent>) => {
     e.stopPropagation();
@@ -104,7 +106,14 @@ const Part = memo(({ part }: { part: MeshPart }) => {
       onPointerOver={handlePointerOver}
       onPointerOut={handlePointerOut}
     >
-      <meshStandardMaterial color={0xcc0000} />
+      <meshStandardMaterial
+        map={textures.redPlaid.albedo}
+        normalMap={textures.redPlaid.normal}
+        metalnessMap={textures.redPlaid.metallic}
+        aoMap={textures.redPlaid.ao}
+        displacementMap={textures.redPlaid.height}
+        displacementScale={0.1}
+      />
     </mesh>
   );
 });

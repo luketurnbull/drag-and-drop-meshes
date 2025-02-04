@@ -19,6 +19,7 @@ const PRIMITIVE_MESHES: DraggableMesh[] = [
       {
         name: "cube",
         geometry: new BoxGeometry(1, 1, 1),
+        material: "redPlaid",
       },
     ],
     scale: 1,
@@ -30,12 +31,15 @@ const PRIMITIVE_MESHES: DraggableMesh[] = [
       {
         name: "sphere",
         geometry: new SphereGeometry(0.5, 100, 100),
+        material: "redPlaid",
       },
     ],
     scale: 1,
   },
 ];
 
+// Main App component
+// Handles the UI and scene
 export default function App() {
   const sectionRef = useRef<HTMLDivElement>(null);
   const [dragItem, setDragItem] = useState<DraggableMesh | null>(null);
@@ -44,14 +48,17 @@ export default function App() {
 
   const selectedMeshId = useMeshStore((state) => state.selectedMeshId);
   const resetSelectedMesh = useMeshStore((state) => state.resetSelectedMesh);
+  const setMeshMaterial = useMeshStore((state) => state.setMeshMaterial);
 
   const isMeshSelected = useMemo(
     () => selectedMeshId !== null,
     [selectedMeshId]
   );
 
-  // Load models using the hook
+  // Load .gltf models
   const loadedMeshes = useModels();
+
+  // Combine primitive Three.js meshes with loaded models
   const meshes = useMemo(
     () => [...PRIMITIVE_MESHES, ...loadedMeshes],
     [loadedMeshes]
@@ -98,6 +105,36 @@ export default function App() {
         {isMeshSelected && (
           <div>
             <h2 className="text-lg font-bold mb-4 text-center">Materials</h2>
+
+            <div className="flex flex-col gap-2">
+              <button
+                className="bg-gray-200 cursor-pointer active:cursor-grabbing rounded-md w-[100px] h-[100px] flex items-center justify-center 
+              hover:shadow-lg hover:shadow-gray-400/50 hover:scale-105"
+                onClick={() => setMeshMaterial("redPlaid")}
+              >
+                <img
+                  src="/material/red-plaid/red-plaid_preview.jpg"
+                  alt="Red Plaid"
+                />
+              </button>
+              <button
+                className="bg-gray-200 cursor-pointer active:cursor-grabbing rounded-md w-[100px] h-[100px] flex items-center justify-center 
+              hover:shadow-lg hover:shadow-gray-400/50 hover:scale-105"
+                onClick={() => setMeshMaterial("denim")}
+              >
+                <img src="/material/denim/denim_preview.jpg" alt="Denim" />
+              </button>
+              <button
+                className="bg-gray-200 cursor-pointer active:cursor-grabbing rounded-md w-[100px] h-[100px] flex items-center justify-center 
+              hover:shadow-lg hover:shadow-gray-400/50 hover:scale-105"
+                onClick={() => setMeshMaterial("houndstooth")}
+              >
+                <img
+                  src="/material/houndstooth-fabric-weave/houndstooth-fabric-weave_preview.jpg"
+                  alt="Houndstooth"
+                />
+              </button>
+            </div>
           </div>
         )}
       </aside>

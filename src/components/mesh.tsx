@@ -75,6 +75,7 @@ export default function Mesh({
         scale={mesh.scale}
         ref={groupRef}
         onClick={handleClick}
+        key={mesh.id}
       >
         {/* Render all parts of the model, so each part can be selected */}
         {mesh.parts.map((part) => (
@@ -100,20 +101,32 @@ const Part = memo(({ part }: { part: MeshPart }) => {
     setHovered(false);
   }, []);
 
+  // Choose material based on mesh ID
+  const getMaterial = () => {
+    if (!part.material) return <meshStandardMaterial color="red" />;
+
+    const material = textures[part.material];
+    if (!material) return <meshStandardMaterial color="red" />;
+
+    return (
+      <meshStandardMaterial
+        map={material.albedo}
+        normalMap={material.normal}
+        metalnessMap={material.metallic}
+        aoMap={material.ao}
+        displacementMap={material.height}
+        displacementScale={0.1}
+      />
+    );
+  };
+
   return (
     <mesh
       geometry={part.geometry}
       onPointerOver={handlePointerOver}
       onPointerOut={handlePointerOut}
     >
-      <meshStandardMaterial
-        map={textures.redPlaid.albedo}
-        normalMap={textures.redPlaid.normal}
-        metalnessMap={textures.redPlaid.metallic}
-        aoMap={textures.redPlaid.ao}
-        displacementMap={textures.redPlaid.height}
-        displacementScale={0.1}
-      />
+      {getMaterial()}
     </mesh>
   );
 });

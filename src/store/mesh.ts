@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import { DraggableMesh } from "../utils/types";
+import { DraggableMesh, MeshMaterial } from "../utils/types";
 import { nanoid } from "nanoid";
 
 type MeshStore = {
@@ -9,6 +9,7 @@ type MeshStore = {
   deleteMesh: (id: string) => void;
   editMesh: (id: string) => void;
   resetSelectedMesh: () => void;
+  setMeshMaterial: (material: MeshMaterial) => void;
 };
 
 export const useMeshStore = create<MeshStore>()((set) => ({
@@ -32,6 +33,21 @@ export const useMeshStore = create<MeshStore>()((set) => ({
   resetSelectedMesh: () => {
     set(() => ({
       selectedMeshId: null,
+    }));
+  },
+  setMeshMaterial: (material: MeshMaterial) => {
+    set((state) => ({
+      meshes: state.meshes.map((mesh) =>
+        mesh.id === state.selectedMeshId
+          ? {
+              ...mesh,
+              parts: mesh.parts.map((part) => ({
+                ...part,
+                material: material,
+              })),
+            }
+          : mesh
+      ),
     }));
   },
 }));

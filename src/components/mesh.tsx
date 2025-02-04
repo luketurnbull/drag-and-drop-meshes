@@ -1,17 +1,35 @@
-import { DragControls, Html, Outlines } from "@react-three/drei";
-import { useState } from "react";
+import { CameraControls, DragControls, Html } from "@react-three/drei";
+import { useEffect, useRef, useState, useCallback } from "react";
 import { DraggableMesh } from "../utils/types";
 import Cross from "./cross";
+import Edit from "./edit";
 import { useMeshStore } from "../store/mesh";
+import { Mesh as ThreeMesh, Box3 } from "three";
 
-export default function Mesh({ id, position, geometry, scale }: DraggableMesh) {
+type MeshProps = DraggableMesh & {
+  controls: CameraControls;
+};
+
+export default function Mesh({
+  id,
+  position,
+  geometry,
+  scale,
+  controls,
+}: MeshProps) {
   const [hovered, setHovered] = useState(false);
   const [selected, setSelected] = useState(false);
+  const meshRef = useRef<ThreeMesh>(null!);
   const { deleteMesh } = useMeshStore();
 
   const handleDelete = () => {
     deleteMesh(id);
   };
+
+  const zoomToMesh = useCallback(() => {
+    const boundingBox = new Box3().setFromObject(meshRef.current);
+    controls.fitToBox(boundingBox, true);
+  }, [controls, meshRef]);
 
   if (!geometry) return null;
 
@@ -36,8 +54,9 @@ export default function Mesh({ id, position, geometry, scale }: DraggableMesh) {
           geometry={geometry}
           position={position}
           scale={scale}
+          ref={meshRef}
           onPointerUp={() => {
-            setSelected(!selected);
+            setSelected(true);
           }}
         >
           {selected && (
@@ -50,11 +69,20 @@ export default function Mesh({ id, position, geometry, scale }: DraggableMesh) {
                 >
                   <Cross />
                 </button>
+                <button
+                  title="Edit mesh"
+                  className="text-black h-10 w-10 hover:cursor-pointer hover:text-blue-500"
+                  onClick={() => {
+                    console.log("edit");
+                    zoomToMesh();
+                  }}
+                >
+                  <Edit />
+                </button>
               </div>
             </Html>
           )}
           <meshStandardMaterial color={hovered ? 0xff0000 : 0xcc0000} />
-          {selected && <Outlines thickness={5} color="black" />}
         </mesh>
       </DragControls>
     </>

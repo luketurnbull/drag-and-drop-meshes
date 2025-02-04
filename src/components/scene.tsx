@@ -2,14 +2,14 @@ import {
   GizmoHelper,
   GizmoViewport,
   Grid,
-  OrbitControls,
   Environment,
+  CameraControls,
 } from "@react-three/drei";
 import { useThree } from "@react-three/fiber";
 import { useMeshStore } from "../store/mesh";
 import Mesh from "./mesh";
 import * as THREE from "three";
-import { useEffect, useCallback } from "react";
+import { useEffect, useCallback, useRef } from "react";
 import { DraggableMesh } from "../utils/types";
 
 export default function Scene({
@@ -21,6 +21,8 @@ export default function Scene({
 }) {
   const meshes = useMeshStore((state) => state.meshes);
   const addMesh = useMeshStore((state) => state.addMesh);
+  const controls = useRef<CameraControls>(null!);
+
   const { camera, raycaster } = useThree();
 
   const handleDrop = useCallback(
@@ -76,6 +78,7 @@ export default function Scene({
           position={position}
           geometry={geometry}
           scale={scale}
+          controls={controls.current}
         />
       ))}
 
@@ -93,7 +96,8 @@ export default function Scene({
         side={THREE.DoubleSide}
       />
 
-      <OrbitControls makeDefault />
+      {/* <OrbitControls makeDefault /> */}
+      <CameraControls makeDefault ref={controls} />
       <Environment preset="city" />
       <GizmoHelper alignment="bottom-right" margin={[80, 80]}>
         <GizmoViewport

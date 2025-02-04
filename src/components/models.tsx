@@ -13,6 +13,7 @@ dracoLoader.setDecoderConfig({ type: "js" });
 const GLTF_MODELS = [
   { id: "hamburger", path: "/hamburger.glb", scale: 0.1 },
   { id: "suzanne", path: "/suzanne.glb", scale: 0.5 },
+  { id: "t-shirt", path: "/t-shirt.glb", scale: 2.0 },
 ] as const;
 
 export default function Models({

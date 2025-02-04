@@ -1,4 +1,5 @@
 import { CameraControls } from "@react-three/drei";
+import { useCallback } from "react";
 
 interface CameraState {
   position?: [number, number, number];
@@ -39,24 +40,29 @@ export const CAMERA_STATES: Record<string, CameraState> = {
   },
 };
 
-export const setCameraState = (
-  controls: CameraControls,
-  state: keyof typeof CAMERA_STATES,
-  animate: boolean = true
-) => {
-  const config = CAMERA_STATES[state];
+export const useCamera = (controls: CameraControls | null) => {
+  const setCameraState = useCallback(
+    (state: keyof typeof CAMERA_STATES, animate: boolean = true) => {
+      if (!controls) return;
 
-  // Set position if defined
-  if (config.position) {
-    controls.setPosition(
-      config.position[0],
-      config.position[1],
-      config.position[2],
-      animate
-    );
-  }
+      const config = CAMERA_STATES[state];
 
-  // Set control states
-  controls.enabled = config.controls.enabled;
-  Object.assign(controls.mouseButtons, config.controls.mouseButtons);
+      // Set position if defined
+      if (config.position) {
+        controls.setPosition(
+          config.position[0],
+          config.position[1],
+          config.position[2],
+          animate
+        );
+      }
+
+      // Set control states
+      controls.enabled = config.controls.enabled;
+      Object.assign(controls.mouseButtons, config.controls.mouseButtons);
+    },
+    [controls]
+  );
+
+  return { setCameraState };
 };

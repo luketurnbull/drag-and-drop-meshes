@@ -8,7 +8,7 @@ import { Html, CameraControls } from "@react-three/drei";
 import Spinner from "./icons/Spinner";
 import { useMeshStore } from "./store/mesh";
 import BackIcon from "./icons/Back";
-import { setCameraState } from "./utils/camera";
+import { useCamera } from "./hooks/use-camera";
 
 // Initial primitive Three.js meshes
 const PRIMITIVE_MESHES: DraggableMesh[] = [
@@ -40,6 +40,7 @@ export default function App() {
   const sectionRef = useRef<HTMLDivElement>(null);
   const [dragItem, setDragItem] = useState<DraggableMesh | null>(null);
   const controls = useRef<CameraControls>(null!);
+  const { setCameraState } = useCamera(controls.current);
 
   const selectedMeshId = useMeshStore((state) => state.selectedMeshId);
   const resetSelectedMesh = useMeshStore((state) => state.resetSelectedMesh);
@@ -58,9 +59,7 @@ export default function App() {
   const isLoading = loadedMeshes.length === 0;
 
   const handleBackClick = () => {
-    if (controls.current) {
-      setCameraState(controls.current, "default");
-    }
+    setCameraState("default");
     resetSelectedMesh();
   };
 

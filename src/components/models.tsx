@@ -3,6 +3,7 @@ import { useLoader } from "@react-three/fiber";
 import { DraggableMesh, MeshPart } from "../utils/types";
 import { Vector3, Mesh } from "three";
 import { DRACOLoader } from "three/examples/jsm/loaders/DRACOLoader.js";
+import { useEffect } from "react";
 
 const dracoLoader = new DRACOLoader();
 dracoLoader.setDecoderPath("/draco/");
@@ -67,6 +68,32 @@ export default function Models({
 
   // Call the callback with processed meshes
   onModelsLoaded(processedMeshes);
+
+  // Cleanup geometries and dispose of models when unmounting
+  useEffect(() => {
+    return () => {
+      processedMeshes.forEach((mesh) => {
+        mesh.parts.forEach((part) => {
+          part.geometry.dispose();
+        });
+      });
+
+      models.forEach((gltf) => {
+        gltf.scene.traverse((child) => {
+          if (child instanceof Mesh) {
+            child.geometry.dispose();
+            if (child.material) {
+              if (Array.isArray(child.material)) {
+                child.material.forEach((material) => material.dispose());
+              } else {
+                child.material.dispose();
+              }
+            }
+          }
+        });
+      });
+    };
+  }, [models, processedMeshes]);
 
   return null;
 }

@@ -2,7 +2,7 @@ import { CameraControls, useCursor } from "@react-three/drei";
 import { useRef, useState, useCallback, useMemo, memo, useEffect } from "react";
 import { DraggableMesh, MeshPart } from "../utils/types";
 import { useMeshStore } from "../store/mesh";
-import { Box3, Group } from "three";
+import { Box3, Group, MeshStandardMaterial } from "three";
 import { ThreeEvent, useThree } from "@react-three/fiber";
 import { getIntersectionPoint } from "../utils/raycaster";
 import { setCameraState } from "../utils/camera";
@@ -137,6 +137,7 @@ export default function Mesh({
 
 const Part = memo(({ part }: { part: MeshPart }) => {
   const [hovered, setHovered] = useState(false);
+  const materialRef = useRef<MeshStandardMaterial>(null!);
   useCursor(hovered);
 
   const handlePointerOver = useCallback((e: ThreeEvent<PointerEvent>) => {
@@ -149,13 +150,22 @@ const Part = memo(({ part }: { part: MeshPart }) => {
     setHovered(false);
   }, []);
 
+  // Cleanup material when unmounting
+  useEffect(() => {
+    return () => {
+      if (materialRef.current) {
+        materialRef.current.dispose();
+      }
+    };
+  }, []);
+
   return (
     <mesh
       geometry={part.geometry}
       onPointerOver={handlePointerOver}
       onPointerOut={handlePointerOut}
     >
-      <meshStandardMaterial color={0xcc0000} />
+      <meshStandardMaterial ref={materialRef} color={0xcc0000} />
     </mesh>
   );
 });

@@ -1,8 +1,8 @@
 import { CameraControls, DragControls, useCursor } from "@react-three/drei";
-import { useRef, useState, useCallback, useMemo, memo } from "react";
+import { useRef, useState, useCallback, useMemo } from "react";
 import { DraggableMesh, MeshPart } from "../utils/types";
 import { useMeshStore } from "../store/mesh";
-import { Box3, Group } from "three";
+import { Box3, Group, MeshStandardMaterialParameters } from "three";
 import { ThreeEvent } from "@react-three/fiber";
 import { useCamera } from "../hooks/use-camera";
 import { useTextures } from "../hooks/use-textures";
@@ -79,15 +79,16 @@ export default function Mesh({
       >
         {/* Render all parts of the model, so each part can be selected */}
         {mesh.parts.map((part) => (
-          <Part key={part.name} part={part} />
+          <Part key={part.name} part={part} meshId={mesh.id} />
         ))}
       </group>
     </DragControls>
   );
 }
 
-const Part = memo(({ part }: { part: MeshPart }) => {
+function Part({ part, meshId }: { part: MeshPart; meshId: string }) {
   const [hovered, setHovered] = useState(false);
+
   useCursor(hovered);
   const textures = useTextures();
 
@@ -102,31 +103,39 @@ const Part = memo(({ part }: { part: MeshPart }) => {
   }, []);
 
   // Choose material based on mesh ID
-  const getMaterial = () => {
-    if (!part.material) return <meshStandardMaterial color="red" />;
+  const materialProps = useMemo(() => {
+    let materialProps: MeshStandardMaterialParameters = {};
+
+    if (!part.material) {
+      return materialProps;
+    }
 
     const material = textures[part.material];
-    if (!material) return <meshStandardMaterial color="red" />;
 
-    return (
-      <meshStandardMaterial
-        map={material.albedo}
-        normalMap={material.normal}
-        metalnessMap={material.metallic}
-        aoMap={material.ao}
-        displacementMap={material.height}
-        displacementScale={0.1}
-      />
-    );
-  };
+    if (!material) {
+      return materialProps;
+    }
+
+    materialProps = {
+      map: material.albedo,
+      normalMap: material.normal,
+      metalnessMap: material.metallic,
+      aoMap: material.ao,
+      displacementMap: material.height,
+      displacementScale: 0.001,
+    };
+
+    return materialProps;
+  }, [part.material, textures]);
 
   return (
     <mesh
+      key={`${meshId}-${part.name}-${part.material}`}
       geometry={part.geometry}
       onPointerOver={handlePointerOver}
       onPointerOut={handlePointerOut}
     >
-      {getMaterial()}
+      <meshStandardMaterial {...materialProps} />
     </mesh>
   );
-});
+}

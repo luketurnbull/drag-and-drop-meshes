@@ -19,7 +19,6 @@ const PRIMITIVE_MESHES: DraggableMesh[] = [
       {
         name: "cube",
         geometry: new BoxGeometry(1, 1, 1),
-        material: "redPlaid",
       },
     ],
     scale: 1,
@@ -31,7 +30,6 @@ const PRIMITIVE_MESHES: DraggableMesh[] = [
       {
         name: "sphere",
         geometry: new SphereGeometry(0.5, 100, 100),
-        material: "redPlaid",
       },
     ],
     scale: 1,
@@ -158,7 +156,7 @@ export default function App() {
             fov: 45,
             near: 0.1,
             far: 200,
-            position: [6, 4, 8],
+            position: [4, 4, 6],
           }}
         >
           <CameraControls makeDefault ref={controls} />

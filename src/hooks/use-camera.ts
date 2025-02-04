@@ -21,9 +21,9 @@ export const CAMERA_STATES: Record<string, CameraState> = {
       enabled: true,
       mouseButtons: {
         left: 1, // Rotate
-        middle: 1, // Pan
-        right: 1, // Pan
-        wheel: 1, // Zoom
+        middle: 2, // Dolly
+        right: 3, // Pan
+        wheel: 8, // Zoom
       },
     },
   },
@@ -34,7 +34,7 @@ export const CAMERA_STATES: Record<string, CameraState> = {
         left: 1, // Rotate
         middle: 0, // Disabled
         right: 0, // Disabled
-        wheel: 1, // Zoom
+        wheel: 0, // Zoom
       },
     },
   },

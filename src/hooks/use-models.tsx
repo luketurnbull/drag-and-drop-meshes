@@ -16,11 +16,7 @@ const GLTF_MODELS = [
   { id: "suzanne", path: "/suzanne.glb", scale: 0.5 },
 ] as const;
 
-export default function Models({
-  onModelsLoaded,
-}: {
-  onModelsLoaded: (meshes: DraggableMesh[]) => void;
-}) {
+export function useModels(): DraggableMesh[] {
   // Pre-load all models
   const models = useLoader(
     GLTFLoader,
@@ -66,9 +62,6 @@ export default function Models({
     };
   });
 
-  // Call the callback with processed meshes
-  onModelsLoaded(processedMeshes);
-
   // Cleanup geometries and dispose of models when unmounting
   useEffect(() => {
     return () => {
@@ -95,5 +88,5 @@ export default function Models({
     };
   }, [models, processedMeshes]);
 
-  return null;
+  return processedMeshes;
 }

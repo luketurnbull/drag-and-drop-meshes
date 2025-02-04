@@ -2,7 +2,7 @@ import { Canvas } from "@react-three/fiber";
 import Scene from "./components/scene";
 import { Suspense, useMemo, useRef, useState } from "react";
 import { DraggableMesh } from "./utils/types";
-import Models from "./components/models";
+import { useModels } from "./hooks/use-models";
 import { Vector3, BoxGeometry, SphereGeometry } from "three";
 import { Html, CameraControls } from "@react-three/drei";
 import Spinner from "./icons/Spinner";
@@ -39,8 +39,6 @@ const PRIMITIVE_MESHES: DraggableMesh[] = [
 export default function App() {
   const sectionRef = useRef<HTMLDivElement>(null);
   const [dragItem, setDragItem] = useState<DraggableMesh | null>(null);
-  const [meshes, setMeshes] = useState<DraggableMesh[]>(PRIMITIVE_MESHES);
-  const [isLoading, setIsLoading] = useState(true);
   const controls = useRef<CameraControls>(null!);
 
   const selectedMeshId = useMeshStore((state) => state.selectedMeshId);
@@ -51,10 +49,13 @@ export default function App() {
     [selectedMeshId]
   );
 
-  const handleModelsLoaded = (loadedMeshes: DraggableMesh[]) => {
-    setMeshes([...PRIMITIVE_MESHES, ...loadedMeshes]);
-    setIsLoading(false);
-  };
+  // Load models using the hook
+  const loadedMeshes = useModels();
+  const meshes = useMemo(
+    () => [...PRIMITIVE_MESHES, ...loadedMeshes],
+    [loadedMeshes]
+  );
+  const isLoading = loadedMeshes.length === 0;
 
   const handleBackClick = () => {
     if (controls.current) {
@@ -137,7 +138,6 @@ export default function App() {
               </Html>
             }
           >
-            <Models onModelsLoaded={handleModelsLoaded} />
             <Scene
               controls={controls.current}
               sectionRef={sectionRef}

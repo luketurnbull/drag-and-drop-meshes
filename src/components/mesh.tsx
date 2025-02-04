@@ -1,10 +1,9 @@
-import { CameraControls, useCursor } from "@react-three/drei";
-import { useRef, useState, useCallback, useMemo, memo, useEffect } from "react";
+import { CameraControls, DragControls, useCursor } from "@react-three/drei";
+import { useRef, useState, useCallback, useMemo, memo } from "react";
 import { DraggableMesh, MeshPart } from "../utils/types";
 import { useMeshStore } from "../store/mesh";
-import { Box3, Group, MeshStandardMaterial } from "three";
-import { ThreeEvent, useThree } from "@react-three/fiber";
-import { getIntersectionPoint } from "../utils/raycaster";
+import { Box3, Group } from "three";
+import { ThreeEvent } from "@react-three/fiber";
 import { setCameraState } from "../utils/camera";
 
 export default function Mesh({
@@ -17,10 +16,8 @@ export default function Mesh({
   const groupRef = useRef<Group>(null!);
   const editMesh = useMeshStore((state) => state.editMesh);
   const selectedMeshId = useMeshStore((state) => state.selectedMeshId);
-  const [isDragging, setIsDragging] = useState(false);
-  const [hasDragged, setHasDragged] = useState(false);
-  const { camera, raycaster, gl } = useThree();
-  const dragTimeout = useRef<number | null>(null);
+
+  const [isDragging, setIsDragging] = useState<boolean>(false);
 
   const isSelected = useMemo(
     () => selectedMeshId === mesh.id,
@@ -36,108 +33,47 @@ export default function Mesh({
 
   const handleClick = useCallback(
     (e: ThreeEvent<MouseEvent>) => {
-      if (hasDragged) {
+      if (isSelected || isDragging) {
         e.stopPropagation();
         return;
       }
       editMesh(mesh.id);
       zoomToMesh();
     },
-    [editMesh, mesh.id, zoomToMesh, hasDragged]
+    [editMesh, mesh.id, zoomToMesh, isSelected, isDragging]
   );
-
-  const handlePointerDown = useCallback(
-    (e: ThreeEvent<PointerEvent>) => {
-      e.stopPropagation();
-      setIsDragging(true);
-      setHasDragged(false);
-      document.body.style.cursor = "grabbing";
-      controls.enabled = false;
-    },
-    [controls]
-  );
-
-  const handlePointerMove = useCallback(
-    (e: PointerEvent) => {
-      if (!isDragging || !groupRef.current) return;
-      setHasDragged(true);
-
-      const point = getIntersectionPoint(e, camera, raycaster, gl.domElement);
-
-      if (point) {
-        groupRef.current.position.x = point.x;
-        groupRef.current.position.z = point.z;
-      }
-    },
-    [isDragging, camera, raycaster, gl.domElement]
-  );
-
-  const handlePointerUp = useCallback(() => {
-    if (!isDragging) return;
-
-    setIsDragging(false);
-    document.body.style.cursor = "pointer";
-    controls.enabled = true;
-
-    // Reset hasDragged after a short delay
-    if (dragTimeout.current) window.clearTimeout(dragTimeout.current);
-    dragTimeout.current = window.setTimeout(() => {
-      setHasDragged(false);
-    }, 100);
-  }, [isDragging, controls]);
-
-  // Cleanup timeout
-  useEffect(() => {
-    return () => {
-      if (dragTimeout.current) window.clearTimeout(dragTimeout.current);
-    };
-  }, []);
-
-  // Add and remove window event listeners
-  useEffect(() => {
-    if (isDragging) {
-      window.addEventListener("pointermove", handlePointerMove);
-      window.addEventListener("pointerup", handlePointerUp);
-    }
-
-    return () => {
-      window.removeEventListener("pointermove", handlePointerMove);
-      window.removeEventListener("pointerup", handlePointerUp);
-    };
-  }, [isDragging, handlePointerMove, handlePointerUp]);
 
   // Don't render if not selected and we're in edit mode
   if (!isSelected && selectedMeshId !== null) return null;
   if (mesh.parts.length === 0) return null;
 
-  if (isSelected) {
-    return (
-      <group position={mesh.position} scale={mesh.scale}>
+  return (
+    <DragControls
+      onDrag={() => {
+        setIsDragging(true);
+      }}
+      onDragEnd={() => {
+        setTimeout(() => {
+          setIsDragging(false);
+        }, 100);
+      }}
+    >
+      <group
+        position={mesh.position}
+        scale={mesh.scale}
+        ref={groupRef}
+        onClick={handleClick}
+      >
         {mesh.parts.map((part) => (
           <Part key={part.name} part={part} />
         ))}
       </group>
-    );
-  }
-
-  return (
-    <group
-      position={mesh.position}
-      scale={mesh.scale}
-      ref={groupRef}
-      onClick={handleClick}
-      onPointerDown={handlePointerDown}
-    >
-      {mesh.parts.map((part) => (
-        <Part key={part.name} part={part} />
-      ))}
-    </group>
+    </DragControls>
   );
 }
 
 const Part = memo(({ part }: { part: MeshPart }) => {
   const [hovered, setHovered] = useState(false);
-  const materialRef = useRef<MeshStandardMaterial>(null!);
   useCursor(hovered);
 
   const handlePointerOver = useCallback((e: ThreeEvent<PointerEvent>) => {
@@ -150,22 +86,13 @@ const Part = memo(({ part }: { part: MeshPart }) => {
     setHovered(false);
   }, []);
 
-  // Cleanup material when unmounting
-  useEffect(() => {
-    return () => {
-      if (materialRef.current) {
-        materialRef.current.dispose();
-      }
-    };
-  }, []);
-
   return (
     <mesh
       geometry={part.geometry}
       onPointerOver={handlePointerOver}
       onPointerOut={handlePointerOut}
     >
-      <meshStandardMaterial ref={materialRef} color={0xcc0000} />
+      <meshStandardMaterial color={0xcc0000} />
     </mesh>
   );
 });
